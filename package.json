@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.5",
     "@clerk/nextjs": "^6.12.5",
     "@monaco-editor/react": "^4.7.0",
+    "cashfree-pg": "^5.0.8",
     "convex": "^1.21.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.536.0",
