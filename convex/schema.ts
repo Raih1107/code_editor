@@ -8,8 +8,7 @@ export default defineSchema({
     name: v.string(),
     isPro: v.boolean(),
     proSince: v.optional(v.number()),
-    lemonSqueezyCustomerId: v.optional(v.string()),
-    lemonSqueezyOrderId: v.optional(v.string()),
+
 
     // Add these new fields
     cashfreeCustomerId: v.optional(v.string()),
