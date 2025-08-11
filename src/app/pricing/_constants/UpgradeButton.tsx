@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function UpgradeButton() {
   const CHEKOUT_URL =
-    "https://payments-test.cashfree.com/forms/code-editor-pro";
+    "https://codecraftbyhimanshu.lemonsqueezy.com/buy/978132f0-b091-4b7e-998c-6515224ac17c";
 
   return (
     <Link
