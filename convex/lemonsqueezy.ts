@@ -5,6 +5,8 @@ import { createHmac } from "crypto";
 
 const webhookSecret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET!;
 
+console.log("Webhook secret:", webhookSecret);
+
 function verifySignature(payload: string, signature: string): boolean {
   const hmac = createHmac("sha256", webhookSecret);
   const computedSignature = hmac.update(payload).digest("hex");
