@@ -3,6 +3,7 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import crypto from "crypto";
+import { api } from "./_generated/api";
 
 export const handleCashfree = action({
   args: {
@@ -10,32 +11,48 @@ export const handleCashfree = action({
     headers: v.record(v.string(), v.string()),
   },
   handler: async (ctx, { bodyText, headers }) => {
-    // 🚨 TEMP: Disable signature check for setup
-    console.warn("⚠ Skipping Cashfree signature verification for webhook setup");
+    try {
+      const signature = headers["x-webhook-signature"];
+      if (!signature) {
+        return { status: 400, message: "Missing signature" };
+      }
 
-    const event = JSON.parse(bodyText);
-    console.log("Cashfree event:", event);
+      // ✅ Verify HMAC-SHA256 in base64 (Cashfree docs)
+      const computedSignature = crypto
+        .createHmac("sha256", process.env.CASHFREE_WEBHOOK_SECRET as string)
+        .update(bodyText)
+        .digest("base64");
 
-    // TODO: Add your DB update logic here if needed
-    return { status: 200, message: "Webhook processed (setup mode)" };
-  },
-});
+      if (signature !== computedSignature) {
+        console.error("❌ Invalid Cashfree signature");
+        return { status: 400, message: "Invalid signature" };
+      }
 
+      // Now safe to parse
+      const event = JSON.parse(bodyText);
+      console.log("✅ Verified Cashfree event:", event);
 
-export const handleClerk = action({
-  args: {
-    bodyText: v.string(),
-    headers: v.record(v.string(), v.string()),
-  },
-  handler: async (ctx, { bodyText, headers }) => {
-    const svixId = headers["svix-id"];
-    const svixTimestamp = headers["svix-timestamp"];
-    const svixSignature = headers["svix-signature"];
+      if (event.type === "PAYMENT_SUCCESS_WEBHOOK") {
+        const email = event.data?.customer_details?.customer_email;
+        const orderId = event.data?.order_id;
+        const customerId = event.data?.customer_details?.customer_id;
+        const amount = parseFloat(event.data?.order_amount);
 
-    // You can verify Clerk webhook here
-    const event = JSON.parse(bodyText);
-    console.log("Clerk event:", event);
+        if (email && orderId && customerId && !isNaN(amount)) {
+          // Update Convex DB
+          await ctx.runMutation(api.users.upgradeToPro, {
+            email,
+            cashfreeCustomerId: customerId,
+            cashfreeOrderId: orderId,
+            amount,
+          });
+        }
+      }
 
-    return { status: 200, message: "Webhook processed" };
+      return { status: 200, message: "Webhook processed successfully" };
+    } catch (err) {
+      console.error("Error in Cashfree webhook:", err);
+      return { status: 500, message: "Server error" };
+    }
   },
 });
