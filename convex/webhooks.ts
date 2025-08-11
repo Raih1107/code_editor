@@ -6,27 +6,21 @@ import crypto from "crypto";
 
 export const handleCashfree = action({
   args: {
-    bodyText: v.string(), // ✅ Correct Convex validator
-    headers: v.record(v.string(), v.string()), // ✅ key:string, value:string
+    bodyText: v.string(),
+    headers: v.record(v.string(), v.string()),
   },
   handler: async (ctx, { bodyText, headers }) => {
-    const signature = headers["x-webhook-signature"];
-
-    const computedSignature = crypto
-      .createHmac("sha256", process.env.CASHFREE_WEBHOOK_SECRET as string)
-      .update(bodyText)
-      .digest("hex");
-
-    if (signature !== computedSignature) {
-      return { status: 400, message: "Invalid signature" };
-    }
+    // 🚨 TEMP: Disable signature check for setup
+    console.warn("⚠ Skipping Cashfree signature verification for webhook setup");
 
     const event = JSON.parse(bodyText);
     console.log("Cashfree event:", event);
 
-    return { status: 200, message: "Webhook processed" };
+    // TODO: Add your DB update logic here if needed
+    return { status: 200, message: "Webhook processed (setup mode)" };
   },
 });
+
 
 export const handleClerk = action({
   args: {
