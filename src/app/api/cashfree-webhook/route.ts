@@ -1,39 +1,30 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method Not Allowed" });
-  }
-
-  const bodyText = JSON.stringify(req.body);
-  const headers = req.headers;
-
+export async function POST(request: NextRequest) {
   try {
-    // Call your Convex action via fetch or Convex client SDK
-    // Here, let's call Convex HTTP API or internal function (example below)
+    const body = await request.json();
 
-    // Example: forwarding to your Convex HTTP route if you have one deployed
-    const convexWebhookUrl = process.env.CONVEX_WEBHOOK_URL || "https://your-convex-endpoint/api/cashfree-webhook";
+    console.log("Cashfree webhook received:", body);
 
-    const convexResponse = await fetch(convexWebhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ bodyText, headers }),
-    });
+    // TODO: Verify signature, forward to Convex, etc.
 
-    if (!convexResponse.ok) {
-      const errorText = await convexResponse.text();
-      console.error("Convex webhook error:", errorText);
-      return res.status(500).json({ message: "Error forwarding webhook to Convex" });
-    }
-
-    const result = await convexResponse.json();
-
-    return res.status(result.status || 200).json({ message: result.message || "Webhook handled" });
+    return NextResponse.json({ message: "Webhook received" }, { status: 200 });
   } catch (error) {
-    console.error("Error processing webhook:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Webhook handler error:", error);
+    return NextResponse.json({ message: "Invalid request" }, { status: 400 });
   }
+}
+
+// Optionally support other methods to avoid 405
+
+export async function GET() {
+  return NextResponse.json({ message: "Method GET not allowed" }, { status: 405 });
+}
+
+export async function PUT() {
+  return NextResponse.json({ message: "Method PUT not allowed" }, { status: 405 });
+}
+
+export async function DELETE() {
+  return NextResponse.json({ message: "Method DELETE not allowed" }, { status: 405 });
 }
