@@ -5,6 +5,18 @@ import { api } from "./_generated/api";
 const http = httpRouter();
 
 http.route({
+  path: "/pabbly-webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    const result = await ctx.runAction(api.webhooks.handlePabbly, { body });
+    return new Response(result.message, { status: result.status });
+  }),
+});
+
+
+
+http.route({
   path: "/cashfree-webhook",
   method: "POST",
   handler: httpAction(async (ctx, request) => {

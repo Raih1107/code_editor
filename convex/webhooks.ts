@@ -1,9 +1,35 @@
+// convex/webhooks.ts
 "use node";
 
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import crypto from "crypto";
 import { api } from "./_generated/api";
+
+export const handlePabbly = action({
+  args: {
+    body: v.any(),
+  },
+  handler: async (ctx, { body }) => {
+    console.log("📦 Pabbly event:", body);
+
+    // Adjust field names based on Pabbly's payload mapping
+    const email = body.email;
+    const orderId = body.order_id;
+    const customerId = body.customer_id;
+    const amount = parseFloat(body.amount);
+
+    if (email && orderId && customerId && !isNaN(amount)) {
+      await ctx.runMutation(api.users.upgradeToPro, {
+        email,
+        cashfreeCustomerId: customerId,
+        cashfreeOrderId: orderId,
+        amount,
+      });
+    }
+
+    return { status: 200, message: "Pabbly webhook processed" };
+  },
+});
 
 export const handleCashfree = action({
   args: {
